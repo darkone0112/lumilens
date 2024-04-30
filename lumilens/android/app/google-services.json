@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1067539018552",
+    "project_id": "bbc-and-lumilense",
+    "storage_bucket": "bbc-and-lumilense.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1067539018552:android:de52bb4155eacf8557c7cd",
+        "android_client_info": {
+          "package_name": "com.example.lumilens"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyArpxvH5YXyPFVqeR6fXDEjzPcCbklEAS8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
