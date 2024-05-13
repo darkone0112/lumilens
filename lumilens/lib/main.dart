@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'login_screen.dart';  // Make sure this import is correct
+import 'package:firebase_auth/firebase_auth.dart';
+import 'login_screen.dart';
+import 'home_screen.dart';  // Make sure to have HomeScreen imported
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -19,7 +21,33 @@ class LumiLensApp extends StatelessWidget {
         primarySwatch: Colors.blue,
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
-      home: const LoginScreen(),  // Set LoginScreen as the initial route
+      home: LandingPage(),  // Use LandingPage to handle the initial screen based on authentication status
+    );
+  }
+}
+
+class LandingPage extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder<User?>(
+      stream: FirebaseAuth.instance.authStateChanges(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.active) {
+          // Check if the snapshot has data which indicates there is an active session
+          User? user = snapshot.data;
+          if (user == null) {
+            return const LoginScreen();
+          }
+          return HomeScreen(email: user.email ?? 'No Email');  // Assuming HomeScreen takes a 'email' parameter
+        } else {
+          // Show loading indicator while waiting for auth data
+          return Scaffold(
+            body: const Center(
+              child: CircularProgressIndicator(),
+            ),
+          );
+        }
+      },
     );
   }
 }

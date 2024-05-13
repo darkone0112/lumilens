@@ -14,6 +14,9 @@ dependencies:
   cloud_firestore: ^4.0.1
   font_awesome_flutter: ^10.1.0
   cached_network_image: ^3.2.0
+  http: ^0.13.3
+  video_player: ^2.2.14
+  wakelock: ^0.6.2
 
 
 
