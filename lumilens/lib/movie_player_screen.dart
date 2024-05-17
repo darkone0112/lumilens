@@ -16,6 +16,8 @@ class _MoviePlayerScreenState extends State<MoviePlayerScreen> {
   late VideoPlayerController _controller;
   Timer? _hideTimer;
   bool _areControlsVisible = true;
+  bool _isVolumeSliderVisible = false;
+  double _volume = 1.0; // Initial volume
 
   @override
   void initState() {
@@ -50,7 +52,25 @@ class _MoviePlayerScreenState extends State<MoviePlayerScreen> {
     _hideTimer = Timer(const Duration(seconds: 5), () {
       setState(() {
         _areControlsVisible = false;
+        _isVolumeSliderVisible = false; // Hide the volume slider when controls hide
       });
+    });
+  }
+
+  void _seekForward() {
+    final newPosition = _controller.value.position + const Duration(seconds: 10);
+    _controller.seekTo(newPosition);
+  }
+
+  void _seekBackward() {
+    final newPosition = _controller.value.position - const Duration(seconds: 10);
+    _controller.seekTo(newPosition);
+  }
+
+  void _setVolume(double volume) {
+    setState(() {
+      _volume = volume;
+      _controller.setVolume(volume);
     });
   }
 
@@ -83,12 +103,22 @@ class _MoviePlayerScreenState extends State<MoviePlayerScreen> {
   Widget _buildControls() {
     return AnimatedOpacity(
       opacity: _areControlsVisible ? 1.0 : 0.0,
-      duration: Duration(milliseconds: 300),
+      duration: const Duration(milliseconds: 300),
       child: Container(
         alignment: Alignment.bottomCenter,
-        child: Wrap(
+        color: Colors.black54, // Slightly dark background for better visibility
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.end,
           children: [
-            VideoProgressIndicator(_controller, allowScrubbing: true),
+            VideoProgressIndicator(
+              _controller,
+              allowScrubbing: true,
+              colors: const VideoProgressColors(
+                backgroundColor: Colors.grey,
+                playedColor: Color.fromARGB(255, 243, 33, 33),
+                bufferedColor: Color.fromARGB(255, 244, 3, 3),
+              ),
+            ),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: <Widget>[
@@ -100,17 +130,52 @@ class _MoviePlayerScreenState extends State<MoviePlayerScreen> {
                   }),
                 ),
                 IconButton(
-                  icon: Icon(Icons.fullscreen_exit),
+                  icon: const Icon(Icons.replay_10),
+                  color: Colors.white,
+                  onPressed: _seekBackward,
+                ),
+                IconButton(
+                  icon: const Icon(Icons.forward_10),
+                  color: Colors.white,
+                  onPressed: _seekForward,
+                ),
+                IconButton(
+                  icon: const Icon(Icons.volume_up),
+                  color: Colors.white,
+                  onPressed: () {
+                    setState(() {
+                      _isVolumeSliderVisible = !_isVolumeSliderVisible;
+                      if (_isVolumeSliderVisible) {
+                        _startHideTimer(); // Restart timer when volume slider is shown
+                      }
+                    });
+                  },
+                ),
+                if (_isVolumeSliderVisible)
+                  SizedBox(
+                    width: 150,
+                    child: Slider(
+                      value: _volume,
+                      min: 0.0,
+                      max: 1.0,
+                      onChanged: (value) {
+                        setState(() {
+                          _setVolume(value);
+                        });
+                      },
+                    ),
+                  ),
+                const Spacer(),
+                IconButton(
+                  icon: const Icon(Icons.fullscreen_exit),
                   color: Colors.white,
                   onPressed: () => Navigator.pop(context),
                 ),
               ],
             ),
-          ]
-        )
-      )
-      );
+          ],
+        ),
+      ),
+    );
   }
 }
-
-      
