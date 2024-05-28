@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:carousel_slider/carousel_slider.dart';
+import 'dart:math';
 import 'movie_player_screen.dart';
 import 'settings_modal.dart'; // Ensure this is pointing to the correct file
 
@@ -34,6 +35,22 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() {
       _searchQuery = query;
     });
+  }
+
+  void _playRandomMovie(List<DocumentSnapshot> movies) {
+    if (movies.isNotEmpty) {
+      final randomIndex = Random().nextInt(movies.length);
+      final randomMovie = movies[randomIndex];
+      final movieTitle = randomMovie['title']; // Assuming 'title' holds the movie title
+      final backendUrl = 'http://bolshoi-burglars-cinema.duckdns.org/'; // Adjust the URL according to your backend
+      final streamingUrl = Uri.parse('$backendUrl/stream/$movieTitle');
+
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (context) => MoviePlayerScreen(movieUrl: streamingUrl),
+        ),
+      );
+    }
   }
 
   Widget _buildMovieItem(BuildContext context, DocumentSnapshot movie) {
@@ -134,9 +151,17 @@ class _HomeScreenState extends State<HomeScreen> {
           onChanged: _updateSearchQuery,
         ),
         actions: [
-          IconButton(
-            icon: const Icon(FontAwesomeIcons.layerGroup),
-            onPressed: _toggleViewType,
+          StreamBuilder<QuerySnapshot>(
+            stream: FirebaseFirestore.instance.collection('movies').snapshots(),
+            builder: (context, snapshot) {
+              if (snapshot.hasData) {
+                return IconButton(
+                  icon: const Icon(FontAwesomeIcons.random), // Use a random play icon
+                  onPressed: () => _playRandomMovie(snapshot.data!.docs),
+                );
+              }
+              return Container(); // Return an empty container if there's no data
+            },
           ),
           IconButton(
             icon: const Icon(Icons.settings),

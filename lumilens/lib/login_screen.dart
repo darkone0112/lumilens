@@ -10,11 +10,25 @@ class LoginScreen extends StatefulWidget {
   State<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStateMixin {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
   final TextEditingController usernameController = TextEditingController();
   bool isLogin = true;  // Toggle between login and register
+
+  late AnimationController _fadeController;
+  late Animation<double> _fadeAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _fadeController = AnimationController(
+      duration: const Duration(seconds: 2),
+      vsync: this,
+    );
+    _fadeAnimation = CurvedAnimation(parent: _fadeController, curve: Curves.easeIn);
+    _fadeController.forward();
+  }
 
   void toggleView() {
     setState(() {
@@ -65,38 +79,141 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   @override
+  void dispose() {
+    emailController.dispose();
+    passwordController.dispose();
+    usernameController.dispose();
+    _fadeController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(isLogin ? 'Login' : 'Register'),
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            if (!isLogin)
-              TextField(
-                controller: usernameController,
-                decoration: const InputDecoration(labelText: 'Username'),
+      body: SingleChildScrollView(
+        child: AnimatedBuilder(
+          animation: _fadeController,
+          builder: (context, child) {
+            return Opacity(
+              opacity: _fadeAnimation.value,
+              child: child,
+            );
+          },
+          child: Container(
+            height: MediaQuery.of(context).size.height,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Colors.blueAccent, Colors.black87],
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
               ),
-            TextField(
-              controller: emailController,
-              decoration: const InputDecoration(labelText: 'Email'),
             ),
-            TextField(
-              controller: passwordController,
-              obscureText: true,
-              decoration: const InputDecoration(labelText: 'Password'),
+            child: Center(
+              child: Padding(
+                padding: const EdgeInsets.all(20.0),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    // Logo Space
+                    Container(
+                      margin: const EdgeInsets.only(bottom: 20.0),
+                      child: const Image(
+                        image: AssetImage('assets/images/logo.png'), // Place your logo image here
+                        width: 200,
+                        height: 200,
+                      ),
+                    ),
+                    Card(
+                      color: Colors.grey[900]?.withOpacity(0.5),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(15),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Column(
+                          children: [
+                            if (!isLogin)
+                              TextField(
+                                controller: usernameController,
+                                style: const TextStyle(color: Colors.white),
+                                decoration: InputDecoration(
+                                  labelText: 'Username',
+                                  labelStyle: const TextStyle(color: Colors.white54),
+                                  enabledBorder: OutlineInputBorder(
+                                    borderSide: const BorderSide(color: Colors.white54),
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderSide: const BorderSide(color: Colors.white),
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                ),
+                              ),
+                            const SizedBox(height: 16),
+                            TextField(
+                              controller: emailController,
+                              style: const TextStyle(color: Colors.white),
+                              decoration: InputDecoration(
+                                labelText: 'Email',
+                                labelStyle: const TextStyle(color: Colors.white54),
+                                enabledBorder: OutlineInputBorder(
+                                  borderSide: const BorderSide(color: Colors.white54),
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderSide: const BorderSide(color: Colors.white),
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            TextField(
+                              controller: passwordController,
+                              obscureText: true,
+                              style: const TextStyle(color: Colors.white),
+                              decoration: InputDecoration(
+                                labelText: 'Password',
+                                labelStyle: const TextStyle(color: Colors.white54),
+                                enabledBorder: OutlineInputBorder(
+                                  borderSide: const BorderSide(color: Colors.white54),
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderSide: const BorderSide(color: Colors.white),
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 20),
+                            ElevatedButton(
+                              onPressed: isLogin ? loginUser : registerUser,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.blue,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(15),
+                                ),
+                                padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 15),
+                              ),
+                              child: Text(isLogin ? 'Login' : 'Register',
+                                style: const TextStyle(color: Colors.white),),    
+                            ),
+                            const SizedBox(height: 10),
+                            TextButton(
+                              onPressed: toggleView,
+                              child: Text(
+                                isLogin ? 'Need an account? Register' : 'Have an account? Login',
+                                style: const TextStyle(color: Colors.white),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
-            ElevatedButton(
-              onPressed: isLogin ? loginUser : registerUser,
-              child: Text(isLogin ? 'Login' : 'Register'),
-            ),
-            TextButton(
-              onPressed: toggleView,
-              child: Text(isLogin ? 'Need an account? Register' : 'Have an account? Login'),
-            ),
-          ],
+          ),
         ),
       ),
     );

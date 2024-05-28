@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'login_screen.dart';
-import 'home_screen.dart'; // Make sure to have HomeScreen imported
+import 'home_screen.dart'; // Ensure this is imported
+import 'splash_screen.dart'; // Ensure this is imported
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -27,7 +28,7 @@ class LumiLensApp extends StatelessWidget {
         ),
         scaffoldBackgroundColor: Colors.black, // Background color for the entire app
       ),
-      home: LandingPage(), // Use LandingPage to handle the initial screen based on authentication status
+      home: const SplashScreen(), // Use SplashScreen as the initial screen
     );
   }
 }
