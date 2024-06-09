@@ -1,5 +1,3 @@
-// ignore_for_file: unused_element, use_build_context_synchronously
-
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -7,20 +5,18 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'dart:math';
 import 'movie_player_screen.dart';
-import 'settings_modal.dart';
-import 'playlist_screen.dart'; 
 
 enum ViewType { fullScreen, fullScreenSmooth, twoPerRow }
 
-class HomeScreen extends StatefulWidget {
+class PlaylistScreen extends StatefulWidget {
   final String email;
-  const HomeScreen({super.key, required this.email});
+  const PlaylistScreen({super.key, required this.email});
 
   @override
-  _HomeScreenState createState() => _HomeScreenState();
+  _PlaylistScreenState createState() => _PlaylistScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _PlaylistScreenState extends State<PlaylistScreen> {
   ViewType _viewType = ViewType.twoPerRow;
   String _searchQuery = '';
 
@@ -40,34 +36,15 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
-  void _playRandomMovie(List<DocumentSnapshot> movies) {
-    if (movies.isNotEmpty) {
-      final randomIndex = Random().nextInt(movies.length);
-      final randomMovie = movies[randomIndex];
-      final movieTitle = randomMovie['title']; // Assuming 'title' holds the movie title
-      final backendUrl = 'http://bolshoi-burglars-cinema.duckdns.org/'; // Adjust the URL according to your backend
-      final streamingUrl = Uri.parse('$backendUrl/stream/$movieTitle');
-
-      Navigator.of(context).push(
-        MaterialPageRoute(
-          builder: (context) => MoviePlayerScreen(movieUrl: streamingUrl),
-        ),
-      );
-    }
-  }
-
-  Future<void> _addToPlaylist(DocumentSnapshot movie) async {
+  Future<void> _removeFromPlaylist(DocumentSnapshot movie) async {
     var movieId = movie.id;
     var userEmail = widget.email;
     var userDocRef = FirebaseFirestore.instance.collection('users').doc(userEmail);
 
-    await userDocRef.collection('favorites').doc(movieId).set({
-      'title': movie['title'],
-      'image': movie['image'],
-    });
+    await userDocRef.collection('favorites').doc(movieId).delete();
 
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('${movie['title']} added to your playlist')),
+      SnackBar(content: Text('${movie['title']} removed from your playlist')),
     );
   }
 
@@ -85,7 +62,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         );
       },
-      onDoubleTap: () => _addToPlaylist(movie), // Handle double-tap to add to playlist
+      onDoubleTap: () => _removeFromPlaylist(movie), // Handle double-tap to remove from playlist
       child: Card(
         clipBehavior: Clip.antiAlias,
         child: CachedNetworkImage(
@@ -141,23 +118,6 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  void _showSettingsModal() {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return const SettingsModal();
-      },
-    );
-  }
-
-  void _openPlaylist() {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => PlaylistScreen(email: widget.email),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     if (MediaQuery.of(context).orientation == Orientation.portrait) {
@@ -170,7 +130,7 @@ class _HomeScreenState extends State<HomeScreen> {
       appBar: AppBar(
         title: TextField(
           decoration: const InputDecoration(
-            hintText: 'Search Movies...',
+            hintText: 'Search Playlist...',
             hintStyle: TextStyle(color: Colors.white54),
             border: InputBorder.none,
           ),
@@ -178,32 +138,20 @@ class _HomeScreenState extends State<HomeScreen> {
           onChanged: _updateSearchQuery,
         ),
         actions: [
-          StreamBuilder<QuerySnapshot>(
-            stream: FirebaseFirestore.instance.collection('movies').snapshots(),
-            builder: (context, snapshot) {
-              if (snapshot.hasData) {
-                return IconButton(
-                  icon: const Icon(FontAwesomeIcons.random), // Use a random play icon
-                  onPressed: () => _playRandomMovie(snapshot.data!.docs),
-                );
-              }
-              return Container(); // Return an empty container if there's no data
-            },
-          ),
           IconButton(
-            icon: const Icon(Icons.playlist_play),
-            onPressed: _openPlaylist, // Open the playlist screen
-          ),
-          IconButton(
-            icon: const Icon(Icons.settings),
-            onPressed: _showSettingsModal, // Call to show the settings modal
+            icon: const Icon(FontAwesomeIcons.layerGroup),
+            onPressed: _toggleViewType,
           ),
         ],
       ),
       body: Container(
         color: Colors.black, // Set background color to black
         child: StreamBuilder<QuerySnapshot>(
-          stream: FirebaseFirestore.instance.collection('movies').snapshots(),
+          stream: FirebaseFirestore.instance
+              .collection('users')
+              .doc(widget.email)
+              .collection('favorites')
+              .snapshots(),
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
               return const Center(child: CircularProgressIndicator());
@@ -214,7 +162,7 @@ class _HomeScreenState extends State<HomeScreen> {
             if (snapshot.hasData) {
               return _buildMovieView(snapshot.data!);
             }
-            return const Center(child: Text('No movies found'));
+            return const Center(child: Text('No movies found in your playlist'));
           },
         ),
       ),

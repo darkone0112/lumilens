@@ -18,7 +18,8 @@ dependencies:
   video_player: ^2.2.14
   wakelock: ^0.6.2
   carousel_slider: ^4.0.0
-
+  flutter_keyboard_visibility: ^5.0.0
+  shared_preferences: ^2.0.15
 
 
 dev_dependencies:
